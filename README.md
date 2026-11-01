@@ -1,6 +1,6 @@
-NOMBRE: [Tu Nombre]
+NOMBRE: TIRADO LAM JOSÉ CARLOS
 
-EXPEDIENTE: [Tu Expediente]
+EXPEDIENTE: [225213509]
 
 # Práctica guiada: Logging en Java con `java.util.logging`
 
@@ -132,10 +132,15 @@ LOG.info(
 Responder:
 
 1. ¿Qué información adicional muestra el mensaje del Logger?
+   - **Respuesta:** Muestra la fecha y hora exacta (marca temporal), el nombre completamente calificado de la clase emisora (`mx.unison.ProcesadorCalificaciones`), el método ejecutor (`main`) y el nivel de severidad del mensaje (`INFO`).
 2. ¿Aparece la fecha/hora?
+   - **Respuesta:** Sí, aparece al inicio del encabezado formateado (por ejemplo: `oct 31, 2026 5:33:03 P. M.`).
 3. ¿Aparece el nombre de la clase?
+   - **Respuesta:** Sí, aparece indicando la clase y el método de donde proviene el mensaje (`mx.unison.ProcesadorCalificaciones main`).
 4. ¿Aparece el nivel del mensaje?
+   - **Respuesta:** Sí, se indica explícitamente el nivel del mensaje antes del texto (`INFO: ...`).
 5. ¿Cuál de los dos mecanismos proporciona más información para diagnosticar un problema?
+   - **Respuesta:** El objeto `Logger` proporciona significativamente más información. Mientras que `System.out.println()` se limita a imprimir una línea de texto plano en la salida estándar sin contexto, `Logger` proporciona contexto técnico completo (timestamp, clase, método, hilo de ejecución y nivel), permite discriminar mensajes según su criticidad mediante niveles configurables, permite dirigir la salida a múltiples destinos (consola, archivos, sockets) sin alterar el código, y soporta el registro de excepciones con su traza de pila (*stack trace*) completa.
 
 
 ## Parte II. Niveles de logging
@@ -212,13 +217,13 @@ En la siguiente tabla, signar un nivel apropiado a cada situación.
 
 | Situación | Nivel propuesto |
 |---|---|
-| La aplicación inicia correctamente | |
-| No existe el archivo solicitado | |
-| Se procesaron 250 registros | |
-| Se encontró una calificación inválida | |
-| Se cargó `application.properties` | |
-| Se desea conocer el valor de una variable durante depuración | |
-| La aplicación no puede continuar | |
+| La aplicación inicia correctamente | `INFO` |
+| No existe el archivo solicitado | `SEVERE` |
+| Se procesaron 250 registros | `INFO` |
+| Se encontró una calificación inválida | `WARNING` |
+| Se cargó `application.properties` | `CONFIG` |
+| Se desea conocer el valor de una variable durante depuración | `FINE` / `FINER` |
+| La aplicación no puede continuar | `SEVERE` |
 
 
 
@@ -415,11 +420,11 @@ Completar la siguiente tabla indicando que mensajes se muestran en cada configur
 
 | Configuración | SEVERE | WARNING | INFO | FINE |
 |---|---|---|---|---|
-| `SEVERE` | | | | |
-| `WARNING` | | | | |
-| `INFO` | | | | |
-| `FINE` | | | | |
-| `ALL` | | | | |
+| `SEVERE` | Sí | No | No | No |
+| `WARNING` | Sí | Sí | No | No |
+| `INFO` | Sí | Sí | Sí | No |
+| `FINE` | Sí | Sí | Sí | Sí |
+| `ALL` | Sí | Sí | Sí | Sí |
 
 
 
@@ -657,11 +662,11 @@ aplicacion.log
 
 | Característica | XML | Texto |
 |---|----|---|
-| Fácil de leer por una persona | | |
-| Fácil de procesar automáticamente | | |
-| Estructura explícita | | |
-| Tamaño más compacto | | |
-| Adecuado para inspección rápida | | |
+| Fácil de leer por una persona | No | Sí |
+| Fácil de procesar automáticamente | Sí | No |
+| Estructura explícita | Sí | No |
+| Tamaño más compacto | No | Sí |
+| Adecuado para inspección rápida | No | Sí |
 
 
 
@@ -989,5 +994,25 @@ El estudiante deberá entregar:
 - Tabla de niveles completada.
 - Respuestas a la actividad de diagnóstico.
 - Breve explicación de la diferencia entre `Logger`, `Handler`, `Level` y `Formatter`.
+
+### 28.1 Explicación conceptual: `Logger`, `Handler`, `Level` y `Formatter`
+
+| Componente | Rol en la arquitectura | Descripción y responsabilidad |
+|---|---|---|
+| **`Logger`** | Origen / Captura | Objeto principal con el que interactúa la aplicación para registrar eventos (`LOG.info()`, `LOG.warning()`, `LOG.severe()`, etc.). Crea instancias de `LogRecord` y las reenvía a los manejadores registrados si pasan el filtro inicial. |
+| **`Handler`** | Destino / Exportación | Responsable de recibir los `LogRecord` y publicarlos en un medio de salida específico (`ConsoleHandler` hacia la consola, `FileHandler` hacia archivos en disco, `SocketHandler` a la red). Cada handler posee su propio umbral de nivel independiente. |
+| **`Level`** | Filtrado / Severidad | Define la escala de criticidad del evento (`SEVERE` > `WARNING` > `INFO` > `CONFIG` > `FINE` > `FINER` > `FINEST`). Permite filtrar dinámicamente qué mensajes se procesan en el logger y en cada handler sin recompilar ni alterar el código. |
+| **`Formatter`** | Presentación / Estructura | Se encarga de traducir un `LogRecord` a una cadena formateada final antes de su escritura. Por ejemplo, `SimpleFormatter` genera registros en texto plano comprensible por humanos, mientras que `XMLFormatter` produce documentos XML estructurados para procesamiento automatizado. |
+
+### 28.2 Archivos generados y verificados en la práctica
+
+1. **`ProcesadorCalificaciones.java`:** Código fuente con instrumentación completa de logging:
+   - Configuración desacoplada de `ConsoleHandler` (nivel `INFO`) y `FileHandler` (nivel `FINE`).
+   - Uso de al menos 4 niveles (`INFO`, `CONFIG`, `FINE`, `WARNING`, `SEVERE`).
+   - Registro de excepciones utilizando `LOG.log(Level.SEVERE, "...", e)`.
+   - Conteo de registros totales, válidos e inválidos, cálculo de promedio y trazabilidad completa sin usar `System.out.println`.
+2. **`calificaciones.txt`:** Archivo de datos de prueba con 8 registros que incluye valores válidos (85, 92, 100, 78, 90), fuera de rango (-5, 105) y no numéricos (abc).
+3. **`procesador.log`:** Archivo de bitácora generado en disco con formato `SimpleFormatter` que documenta el ciclo de vida completo del procesamiento.
+
 
 
